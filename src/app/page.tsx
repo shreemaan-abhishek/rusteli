@@ -8,7 +8,7 @@ const Tabs: React.FC = () => {
     const inputText = document.querySelector('input[type="text"]') as HTMLInputElement;
     const text = inputText.value;
     
-    fetch("http://localhost:8080/compile", {
+    fetch("http://152.42.158.90:8080/compile", {
       method: "POST",
       headers: {
         "Content-Type": "text/plain"
@@ -42,7 +42,7 @@ const Tabs: React.FC = () => {
     const pre = document.getElementById("shader-code") as HTMLPreElement;
     const inputText = document.querySelector('input[type="text"]') as HTMLInputElement;
     const text = inputText.value;
-    fetch("http://localhost:4000/", {
+    fetch("http://152.42.158.90:4000/", {
       method: "POST",
       headers: {
         "Content-Type": "text/plain"
