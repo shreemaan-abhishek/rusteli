@@ -1,95 +1,134 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+import { useState } from "react";
 
-export default function Home() {
+const Tabs: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<"Calculator" | "Shader">("Calculator");
+
+  const sendToServer = () => {
+    const inputText = document.querySelector('input[type="text"]') as HTMLInputElement;
+    const text = inputText.value;
+    
+    fetch("http://localhost:8080/compile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain"
+      },
+      body: '(' + text + ')',
+    })
+    .then(async (response) => {
+      const resultElement = document.getElementById("result") as HTMLParagraphElement;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const wasmBinary = await response.arrayBuffer();
+      const wasmModule = await WebAssembly.compile(wasmBinary);
+      const wasmInstance = await WebAssembly.instantiate(wasmModule, {});
+  
+      if (wasmInstance.exports && wasmInstance.exports.evaluate) {
+        const evaluate = wasmInstance.exports.evaluate as CallableFunction;
+        const result = evaluate();
+        if (resultElement) {
+          resultElement.innerText = `= ${result}`;
+        }
+        console.log(`Result from WASM: ${result}`);
+      } else {
+        console.error("No exported 'evaluate' function found in the WASM module.");
+      }
+    })
+  };
+
+  const sendToElixirServer = () => {
+    const pre = document.getElementById("shader-code") as HTMLPreElement;
+    const inputText = document.querySelector('input[type="text"]') as HTMLInputElement;
+    const text = inputText.value;
+    fetch("http://localhost:4000/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain"
+      },
+      body: text,
+    })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.text();
+    })
+    .then((code) => {
+      if (code.startsWith('```') && code.length >= 3) {
+        code = code.replace(/^```.*\n/, '');
+      }
+      if (code.endsWith('```') && code.length >= 3) {
+        code = code.slice(0, -3);
+      }
+      if (code.endsWith('```\n') && code.length >= 3) {
+        code = code.slice(0, -4);
+      }
+      return code;
+    })
+    .then((code) => {
+      
+      if (pre) {
+        pre.innerText = code;
+      }
+      const shader = new Function(code);
+      shader();
+    })
+    .catch((error) => console.error('Error fetching or executing code:', error));
+  }
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+    <div style={{ padding: "20px" }}>
+      <div style={{ display: "flex", cursor: "pointer", marginBottom: "20px" }}>
+        <div
+          onClick={() => setActiveTab("Calculator")}
+          style={{
+            padding: "10px 20px",
+            borderBottom: activeTab === "Calculator" ? "3px solid blue" : "none",
+            color: activeTab === "Calculator" ? "blue" : "grey",
+          }}
+        >
+          Calculator
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <div
+          onClick={() => setActiveTab("Shader")}
+          style={{
+            padding: "10px 20px",
+            borderBottom: activeTab === "Shader" ? "3px solid blue" : "none",
+            color: activeTab === "Shader" ? "blue" : "grey",
+          }}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Shader Display
+        </div>
+      </div>
+
+      <div className="main">
+        {activeTab === "Calculator" && (
+          <div className="calculator">
+            <div className="enclosure">
+              <input type="text" placeholder="Enter expression" />
+              <p id="result">= </p>
+            </div>
+            <button className="calculate" onClick={() => sendToServer()}>Submit</button>
+          </div>
+        )}
+        {activeTab === "Shader" && (
+          <div className="item">
+            <div className="enclosure">
+              <canvas id="shader-canvas"></canvas>
+              <pre id="shader-code">
+                Shader Code Goes Here
+              </pre>
+            </div>
+            <div className="enclosure">
+              <input type="text" placeholder="Enter Prompt" />
+              <button onClick={() => sendToElixirServer()}>Submit</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default Tabs;
