@@ -22,7 +22,7 @@ const Calculator: React.FC<CalculatorProps> = ({ state, setState }) => {
       });
       return;
     }
-    fetch("http://127.0.0.1:8080/compile", {
+    fetch("http://152.42.158.90:8080/compile", {
       method: "POST",
       headers: {
         "Content-Type": "text/plain",
