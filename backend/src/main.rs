@@ -1,11 +1,18 @@
-use actix_web::{post, web, App, HttpServer, Responder, HttpResponse};
-use wasm_bindgen::prelude::*;
+use actix_web::{post, App, HttpServer, Responder, HttpResponse};
 use actix_cors::Cors;
 use std::fs;
 use std::process::Command;
+use evalexpr::eval;
 
 // This function takes a mathematical expression and generates a WASM module
 fn generate_wasm(expression: &str) -> Result<Vec<u8>, String> {
+    // Check if the expression is a valid mathematical expression
+    if eval(expression).is_err() {
+        return Err(String::from("Invalid mathematical expression"));
+    }
+    
+    // Surround the expression with parentheses
+    let expression = format!("({})", expression);
     // Generate Rust code dynamically based on the expression
     let rust_code = format!(
         r#"
@@ -17,17 +24,14 @@ fn generate_wasm(expression: &str) -> Result<Vec<u8>, String> {
         expression
     );
 
-    // Write the generated Rust code to a file
-    fs::write("src/math_expression.rs", &rust_code)
-        .map_err(|err| format!("Failed to write Rust file: {}", err))?;
-
     // Create a new Cargo project for compiling the code into WASM
     if !std::path::Path::new("wasm_project").exists() {
         Command::new("cargo")
             .args(&["new", "wasm_project", "--lib"])
             .output()
             .map_err(|err| format!("Failed to create Cargo project: {}", err))?;
-            let cargo_toml = r#"
+
+    let cargo_toml = r#"
 [package]
 name = "wasm_project"
 version = "0.1.0"
@@ -40,8 +44,8 @@ wasm-bindgen = "0.2.86"
 crate-type = ["cdylib", "rlib"]
 "#;
 
-            fs::write("wasm_project/Cargo.toml", cargo_toml)
-                .map_err(|err| format!("Failed to write Cargo.toml: {}", err))?;
+    fs::write("wasm_project/Cargo.toml", cargo_toml)
+        .map_err(|err| format!("Failed to write Cargo.toml: {}", err))?;
     }
 
     // Write the code to the library file in the project
