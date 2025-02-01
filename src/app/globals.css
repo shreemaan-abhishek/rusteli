@@ -36,7 +36,7 @@ a {
 
 input {
   font-size: 18px;
-  width: 150px;
+  min-width: 150px;
   height: 40px;
   display: inline;
   text-align: center;
@@ -44,7 +44,6 @@ input {
 
 p {
   display: inline;
-  margin-inline-start: 10px;
   font-size: 20px;
   font-style: bold;
 }
@@ -81,17 +80,16 @@ canvas {
   height: calc(80vh - 110px);
   border: 1px solid #ddd;
   flex: 1;
-  /* borderRadius: "5px" */
 }
 
 pre {
-  display: inline-block;
+  display: inline;
   width: 40%;
   height: calc(80vh - 110px);
   border: 1px solid #ddd;
   white-space: pre-wrap;
-  word-wrap: break-word; /* Allows words to break if they're too long */
   flex: 1;
+  word-wrap: break-word;
   overflow-wrap: break-word;
   overflow-y: auto;
 }
@@ -100,14 +98,12 @@ pre {
   .enclosure {
     flex-direction: column;
   }
-  canvas {
-    width: 80%;
-    height: 40vh;
+  canvas, pre {
+    width: 80vw;
+    height: 35vh;
+    flex: initial;
   }
-  pre {
-    width: 80%;
-    height: 40vh;
-  }
+
   .item {
     height: calc(100vh - 110px);
     display: flex;
@@ -120,8 +116,64 @@ pre {
   border-radius: 5px;
   padding: 10px;
   height: calc(100vh - 110px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.calculator {
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
   align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  text-align: center;
+  
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: red;
+  margin-bottom: 10px;
+}
+
+.modal-message {
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.modal-close-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100px;
+  height: 35px;
+  margin: 10px auto;
+  font-size: 14px;
+}
+
+.modal-close-btn:hover {
+  background-color: #0056b3;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+  max-width: 300px;
 }
