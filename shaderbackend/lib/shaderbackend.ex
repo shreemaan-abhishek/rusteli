@@ -36,10 +36,12 @@ defmodule Shaderbackend do
     ]
 
     body = %{
-      "model" => "gpt-3.5-turbo",  # or "gpt-4"
+      "model" => "gpt-4o",  # or "gpt-4"
       "messages" => [
-        %{"role" => "system", "content" => "You are a concise response AI, very skilled in WebGL who responds only with the code."},
-        %{"role" => "system", "content" => "The id of the canvas element is `shader-canvas`, now please provide WebGL program for the following: "},
+        %{"role" => "developer", "content" => "Respond ONLY with the code for a WebGL program for the following prompt.
+                                              Don't use any `document.` functions in the code, start directly by calling
+                                              `.getContext(\"webgl\")` on `canvasRefCurrent` as if the `canvasRefCurrent`
+                                              variable is already initialised."},
         %{"role" => "user", "content" => prompt}
       ],
       "stream" => false
